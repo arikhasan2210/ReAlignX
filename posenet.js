@@ -2,18 +2,23 @@ let video;
 let poseNet;
 let poses = [];
 var started = false;
+let alertSound = new Audio("alert.mp3");
 
+
+// SET UP AND CREATE A CANVAS
 function setup() {
+  // Create the canvas
   const canvas = createCanvas(640, 480); // or use to make fullscreen canvas window.innerWidth, window.innerHeight, but you should to change the formula in changeFontSize()
   canvas.parent('videoContainer');
 
-  // Video capture 
+  // Video capture from webcam
   video = createCapture(VIDEO);
   video.size(width, height);
   
   if (video == true) {console.log('true');}
 
   // Create a new poseNet method with a single detection
+  // MODEL SECTION: poseNet
   poseNet = ml5.poseNet(video, modelReady);
   // This sets up an event that fills the global variable "poses"
   // with an array every time new poses are detected
@@ -28,6 +33,7 @@ function setup() {
 
 // This function turns on AI
 function start() {
+  // changes the button to stop 
   select('#startbutton').html('stop')
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
@@ -53,6 +59,19 @@ function draw() {
   }
 }
 
+// play alert when 
+let alertCoolDown = false; // Global variable to track cooldown
+function playAlertSound() {
+  //prevent repeated alert
+  // alertCoolDown = false;
+  if (!alertCoolDown){
+    alertSound.play();
+    alertCoolDown = true;
+    setTimeout(() => { alertCoolDown = false; }, 5000); // 5s cooldown
+  }
+  // alertSound.play();
+}
+
 function modelReady(){
   // select('#text').html('Hmm... What is it? It’s time to move! AI has turned on. You can insert your text here.')
 }
@@ -61,6 +80,8 @@ var rightEye, leftEye, rightShoulder, leftShoulder, rightWrist, leftWrist, right
     leftKnee, rightAnkle, leftAnkle, distanceEye, defaultRightEyePosition = [],
     defaultLeftEyePosition = [];
 // A function to draw ellipses over the detected keypoints
+// loop through each detected pose.
+// and xtracts keypoints like eyes, shoulders, wrists, knees, and ankles.
 function drawEyes()  {
   // Loop through all the poses detected
   for (let i = 0; i < poses.length; i++) {
@@ -91,14 +112,14 @@ function drawEyes()  {
       }
       
       //Math.abs converts a negative number to a positive one
-      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) > 15) {
+      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) > 20) {
         blurScreen();
+        playAlertSound();
       }
       
-      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 15) {
+      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 20) {
         removeBlur();
       }
-      
       
       // Only draw an eye is the pose probability is bigger than 0.2
       if (keypoint.score > 0.9 ) {
