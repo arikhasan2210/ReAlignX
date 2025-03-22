@@ -3,6 +3,9 @@ let poseNet;
 let poses = [];
 var started = false;
 let alertSound = new Audio("alert.mp3");
+let alertSound1 = new Audio("alert1.mp3");
+let stareTimer;
+const maxStareTime = 1200000;
 
 
 // SET UP AND CREATE A CANVAS
@@ -23,12 +26,14 @@ function setup() {
   // This sets up an event that fills the global variable "poses"
   // with an array every time new poses are detected
   poseNet.on('pose', function(results) {
-    poses = results;
+      poses = results;
+      resetStareTimer();
   });
   
   // Hide the video element, and just show the canvas
   video.hide();
   noLoop();
+  startStareTimer();  
 }
 
 // This function turns on AI
@@ -38,6 +43,7 @@ function start() {
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
   loop();
+  startStareTimer();  
 }
 
 // This function stops the experiment
@@ -47,6 +53,7 @@ function stop() {
   removeBlur();
   started = false;
   noLoop();
+  clearTimeout(stareTimer); 
 }
 
 function draw() {
@@ -70,6 +77,14 @@ function playAlertSound() {
     setTimeout(() => { alertCoolDown = false; }, 5000); // 5s cooldown
   }
   // alertSound.play();
+}
+
+function playAlertSound_ScreenTime() {
+  if (!alertCoolDown){
+    alertSound1.play();
+    alertCoolDown = true;
+    setTimeout(() => { alertCoolDown = false; }, 5000); // 5s cooldown
+  }
 }
 
 function modelReady(){
@@ -131,6 +146,17 @@ function drawEyes()  {
       }
     }
   }
+}
+
+function startStareTimer() {
+  stareTimer = setTimeout(() => {
+    playAlertSound_ScreenTime();
+  }, maxStareTime);
+}
+
+function resetStareTimer() {
+  clearTimeout(stareTimer);
+  startStareTimer();
 }
 
 function blurScreen() { 
