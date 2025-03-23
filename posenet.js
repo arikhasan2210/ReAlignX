@@ -7,7 +7,7 @@ let alertSound1 = new Audio("sounds/break_reminder.mp3");
 // let alertSound2 = new Audio("fallAlert.mp3");
 let stareTimer;
 const maxStareTime = 5000;
-
+let alertIsActive = false;
 let moveTimer;
 const moveCheckTime = 5000;
 // let fallTimer;
@@ -129,7 +129,8 @@ function drawEyes()  {
       if (!goodPosture && Math.abs(rightEye.y - defaultRightEyePosition[0]) > 25) {
         blurScreen();
         playAlertSound();
-        startMoveTimer();
+	resetStareTimer();  
+        // startMoveTimer();
         // startFallTimer();
       }
       
@@ -150,7 +151,6 @@ function drawEyes()  {
   }
 }
 
-let alertIsActive = false;
 function startStareTimer() {
   stareTimer = setTimeout(() => {
     if (!alertIsActive) {
@@ -181,15 +181,8 @@ function resetStareTimer() {
   startStareTimer();
 }
 
-function startMoveTimer() {
-  moveTimer = setTimeout(() => {
-    resetStareTimer();
-  }, moveCheckTime);
-}
-
 function stopStareTimer() {
   clearTimeout(stareTimer);
-  alertisActive = false;
 }
 
 
