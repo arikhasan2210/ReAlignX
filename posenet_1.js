@@ -3,21 +3,16 @@ let poseNet;
 let poses = [];
 var started = false;
 let alertSound = new Audio("sounds/alert.mp3");
-let alertSound_Staring = new Audio("sounds/break_reminder.mp3");
-let alertSound_Falling = new Audio("sounds/fallAlert.mp3");
+let alertSound1 = new Audio("sounds/break_reminder.mp3");
+// let alertSound2 = new Audio("fallAlert.mp3");
+let stareTimer;
+const maxStareTime = 5000;
 
-let stareStartTime = null;
-const STARE_THRESHOLD = 5000; // 5 seconds
-
-let previousEyeYAvg = null;
-const EYE_STABILITY_THRESHOLD = 5;
-
-let noPersonStartTime = null;
-const NO_PERSON_THRESHOLD = 30000; // 30 seconds
-
-let personPresent = true;
-
-let alertPlayed = false;
+let moveTimer;
+const moveCheckTime = 5000;
+// let fallTimer;
+// const fallTime = 35000;
+// let fallAlertActive = false;
 
 // SET UP AND CREATE A CANVAS
 function setup() {
@@ -52,6 +47,8 @@ function start() {
   document.getElementById('startbutton').removeEventListener('click', start);
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
+  // alertIsActive = true;
+  startStareTimer();  
   loop();
 }
 
@@ -62,7 +59,8 @@ function stop() {
   document.getElementById('startbutton').addEventListener('click', start);
   removeBlur();
   started = false;
-  loop();
+  // loop();
+  stopStareTimer();
 }
 
 function draw() {
@@ -70,9 +68,8 @@ function draw() {
     //We use white picture as background. You can comment this line and see what will happen. It's cool glitch effect.
     // image(whitePicture, 0, 0, width, height);
     image(video, 0, 0, width, height);
+
     drawEyes();
-    checkStaring();
-    checkPersonPresence();  
   }
 }
 
@@ -132,10 +129,18 @@ function drawEyes()  {
       if (!goodPosture && Math.abs(rightEye.y - defaultRightEyePosition[0]) > 25) {
         blurScreen();
         playAlertSound();
+        // startMoveTimer();
+        resetStareTimer();
+        // startFallTimer();
       }
+      // else{
+      //   removeBlur();
+      //   stopStareTimer();
+      // }
       
       if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 25) {
         removeBlur();
+        // resetFallTimer();
       }
       
       // Only draw an eye is the pose probability is bigger than 0.2
@@ -150,6 +155,49 @@ function drawEyes()  {
   }
 }
 
+let alertIsActive = false;
+function startStareTimer() {
+  stareTimer = setTimeout(() => {
+    if (!alertIsActive) {
+      alertSound1.play();
+      alertIsActive = true;
+    }
+  }, maxStareTime);
+}
+
+
+// function startFallTimer() {
+//   fallAlertActive = true;
+
+//   fallTimer = setTimeout(() => {
+//     if (fallAlertActive) {
+//       alertSound2.play();
+//     }
+//   }, fallTime);
+// }
+
+// function resetFallTimer() {
+//   clearTimeout(fallTimer);
+//   fallAlertActive = false;
+// }
+
+function resetStareTimer() {
+  clearTimeout(stareTimer);
+  startStareTimer();
+}
+
+function startMoveTimer() {
+  moveTimer = setTimeout(() => {
+    resetStareTimer();
+  }, moveCheckTime);
+}
+
+function stopStareTimer() {
+  clearTimeout(stareTimer);
+  alertisActive = false;
+}
+
+
 function blurScreen() { 
   document.body.style.filter = 'blur(5px)';
   document.body.style.transition= '0.9s';
@@ -157,109 +205,4 @@ function blurScreen() {
 
 function removeBlur() {
   document.body.style.filter = 'blur(0px)';
-}
-
-function checkStaring() {
-  if (!personPresent || poses.length === 0) {
-    stareStartTime = null;
-    previousEyeYAvg = null;
-    return;
-  }
-
-  if (rightEye && leftEye) {
-    let eyeYAvg = (rightEye.y + leftEye.y) / 2;
-
-    // If it's the first detection, initialize variables
-    if (!stareStartTime || previousEyeYAvg === null) {
-      stareStartTime = millis();
-      previousEyeYAvg = eyeYAvg;
-    }
-
-    // Check if eye position is stable
-    if (Math.abs(eyeYAvg - previousEyeYAvg) < EYE_STABILITY_THRESHOLD) {
-      if (millis() - stareStartTime > STARE_THRESHOLD) {
-        alertSound_Staring.play();
-        stareStartTime = millis(); // Reset timer
-      }
-    } else {
-      // If eye movement is detected, reset staring timer
-      stareStartTime = millis();
-    }
-
-    previousEyeYAvg = eyeYAvg; // Update for next frame
-  } else {
-    stareStartTime = null; // Reset if no eyes detected
-    previousEyeYAvg = null;
-  }
-}
-
-
-function checkPersonPresence() {
-  if (poses.length === 0) {
-    // Start timer if no person is detected
-    if (!noPersonStartTime) {
-      noPersonStartTime = Date.now();
-    }
-    // Check if the person has been absent for too long
-    if (!fallAlertTriggered) {
-      setTimeout(() => {
-        personPresent = false;
-        fallAlertTriggered = true;
-        promptForAmbulance();
-      }, NO_PERSON_THRESHOLD);
-    }
-    noPersonStartTime = null;
-  } else {
-    personPresent = true;
-    fallAlertTriggered = false;
-    // Reset the timer if a person is detected again
-    noPersonStartTime = null;
-  }
-}
-
-
-function promptForAmbulance() {
-  if (alertPlayed) return; // Ensure it plays only once
-  alertPlayed = true;
-
-  alertSound_Falling.play(); // Play the alert sound
-
-  alertSound_Falling.onended = () => { 
-    setTimeout(() => { 
-      startSpeechRecognition(); 
-    }, 2000); // Delay before listening
-  };
-}
-
-function startSpeechRecognition() {
-  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.continuous = false; // Only listen once
-
-  recognition.start();
-
-  recognition.onresult = function(event) {
-    const transcript = event.results[0][0].transcript.toLowerCase();
-
-    if (transcript.includes('yes')) {
-      window.location.href = "tel:911"; // Call emergency
-    } else {
-      stopProgram(); // Stop program if the user says anything else
-    }
-  };
-
-  recognition.onerror = function(event) {
-    stopProgram(); // Stop program if error occurs or no response
-  };
-}
-
-function stopProgram() {
-  alertSound_Falling.pause(); // Stop the alert sound
-  alertSound_Falling.currentTime = 0; // Reset to start
-  alertPlayed = false;
-
-  // Stop the experiment properly
-  stop();
 }
