@@ -17,7 +17,7 @@ let alertSound = new Audio("sounds/alert.mp3");
 // SET UP AND CREATE A CANVAS
 function setup() {
   // Create the canvas
-  const canvas = createCanvas(640, 480); // or use to make fullscreen canvas window.innerWidth, window.innerHeight, but you should to change the formula in changeFontSize()
+  const canvas = createCanvas(800, 600); // or use to make fullscreen canvas window.innerWidth, window.innerHeight, but you should to change the formula in changeFontSize()
   canvas.parent('camera');
 
   // Video capture from webcam
@@ -43,6 +43,8 @@ function setup() {
 function start() {
   // changes the button to stop 
   select('#startbutton').html('stop')
+  // add removeEventListener to avoid listening to multiple events
+  document.getElementById('startbutton').removeEventListener('click', start);
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
   // startStareTimer();  
@@ -52,10 +54,11 @@ function start() {
 // This function stops the experiment
 function stop() {
   select('#startbutton').html('start')
+  document.getElementById('startbutton').removeEventListener('click', stop);
   document.getElementById('startbutton').addEventListener('click', start);
   removeBlur();
   started = false;
-  // noLoop();
+  loop();
   // stopStareTimer();
 }
 
