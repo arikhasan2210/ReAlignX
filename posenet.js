@@ -4,12 +4,16 @@ let poses = [];
 var started = false;
 let alertSound = new Audio("sounds/alert.mp3");
 let alertSound_Staring = new Audio("sounds/break_reminder.mp3");
+let alertSound_Falling = new Audio("sounds/fallAlert.mp3");
 
 let stareStartTime = null;
 const STARE_THRESHOLD = 5000; // 5 seconds
 
 let previousEyeYAvg = null;
 const EYE_STABILITY_THRESHOLD = 5;
+
+let noPersonStartTime = null;
+const NO_PERSON_THRESHOLD = 30000; // 30 seconds
 
 // SET UP AND CREATE A CANVAS
 function setup() {
@@ -64,6 +68,7 @@ function draw() {
     image(video, 0, 0, width, height);
     drawEyes();
     checkStaring();
+    checkPersonPresence();  
   }
 }
 
@@ -176,4 +181,56 @@ function checkStaring() {
     stareStartTime = null; // Reset if no eyes detected
     previousEyeYAvg = null;
   }
+}
+
+
+function checkPersonPresence() {
+  if (poses.length === 0) {
+    if (!noPersonStartTime) {
+      noPersonStartTime = millis(); // Start the timer when the person disappears
+    } else if (millis() - noPersonStartTime > NO_PERSON_THRESHOLD) {
+	// If no person is detected for 5 minutes, prompt the user
+	promptForAmbulance();
+      } else {
+        stop(); // Stop the program
+      }
+      noPersonStartTime = null; // Reset timer after alert
+    }
+  } else {
+    noPersonStartTime = null; // Reset timer if a person is detected
+  }
+}
+
+function promptForAmbulance() {
+
+    // Initialize Speech Recognition
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';  // Language set to English
+    recognition.interimResults = false;  // Don't show interim results (only final)
+    recognition.maxAlternatives = 1;  // Limit to one alternative (best match)
+    getInputs();
+
+    // Function to start the speech recognition
+    function startVoiceInput() {
+	recognition.start();  // Start listening for audio input
+    }
+
+    // Event listener for when speech is recognized
+    recognition.onresult = function(event) {
+	const transcript = event.results[0][0].transcript.toLowerCase();
+	if (transcript.includes('yes')) {
+	    // If the user says "Yes"
+	    window.location.href = "tel:911";  // Replace with actual emergency number
+	} else {
+	    // If the user says "No"
+	    stop();  // Stop the program
+	}
+    };
+
+    // Trigger the recognition (e.g., after a delay, or on user action)
+    function getInputs() {
+	alertSound_Falling.play();
+	startVoiceInput();  // Start voice input after prompt
+    }
+    
 }
