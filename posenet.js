@@ -3,16 +3,6 @@ let poseNet;
 let poses = [];
 var started = false;
 let alertSound = new Audio("sounds/alert.mp3");
-let alertSound1 = new Audio("sounds/break_reminder.mp3");
-// let alertSound2 = new Audio("fallAlert.mp3");
-let stareTimer;
-const maxStareTime = 5000;
-let alertIsActive = false;
-let moveTimer;
-const moveCheckTime = 5000;
-// let fallTimer;
-// const fallTime = 35000;
-// let fallAlertActive = false;
 
 // SET UP AND CREATE A CANVAS
 function setup() {
@@ -47,8 +37,6 @@ function start() {
   document.getElementById('startbutton').removeEventListener('click', start);
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
-  // alertIsActive = true;
-  startStareTimer();  
   loop();
 }
 
@@ -60,7 +48,6 @@ function stop() {
   removeBlur();
   started = false;
   loop();
-  stopStareTimer();
 }
 
 function draw() {
@@ -129,14 +116,10 @@ function drawEyes()  {
       if (!goodPosture && Math.abs(rightEye.y - defaultRightEyePosition[0]) > 25) {
         blurScreen();
         playAlertSound();
-	resetStareTimer();  
-        // startMoveTimer();
-        // startFallTimer();
       }
       
       if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 25) {
         removeBlur();
-        // resetFallTimer();
       }
       
       // Only draw an eye is the pose probability is bigger than 0.2
@@ -150,41 +133,6 @@ function drawEyes()  {
     }
   }
 }
-
-function startStareTimer() {
-  stareTimer = setTimeout(() => {
-    if (!alertIsActive) {
-      alertSound1.play();
-      alertIsActive = true;
-    }
-  }, maxStareTime);
-}
-
-
-// function startFallTimer() {
-//   fallAlertActive = true;
-
-//   fallTimer = setTimeout(() => {
-//     if (fallAlertActive) {
-//       alertSound2.play();
-//     }
-//   }, fallTime);
-// }
-
-// function resetFallTimer() {
-//   clearTimeout(fallTimer);
-//   fallAlertActive = false;
-// }
-
-function resetStareTimer() {
-  clearTimeout(stareTimer);
-  startStareTimer();
-}
-
-function stopStareTimer() {
-  clearTimeout(stareTimer);
-}
-
 
 function blurScreen() { 
   document.body.style.filter = 'blur(5px)';
