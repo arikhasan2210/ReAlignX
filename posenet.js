@@ -2,7 +2,7 @@ let video;
 let poseNet;
 let poses = [];
 var started = false;
-let alertSound = new Audio("alert.mp3");
+let alertSound = new Audio("sounds/alert.mp3");
 // let alertSound1 = new Audio("break_reminder.mp3");
 // let alertSound2 = new Audio("fallAlert.mp3");
 // let stareTimer;
