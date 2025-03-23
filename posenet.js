@@ -3,13 +3,13 @@ let poseNet;
 let poses = [];
 var started = false;
 let alertSound = new Audio("sounds/alert.mp3");
-// let alertSound1 = new Audio("break_reminder.mp3");
+let alertSound1 = new Audio("sounds/break_reminder.mp3");
 // let alertSound2 = new Audio("fallAlert.mp3");
-// let stareTimer;
-// const maxStareTime = 20000;
-// let alertActive = false;
-// let moveTimer;
-// const moveCheckTime = 20000;
+let stareTimer;
+const maxStareTime = 5000;
+
+let moveTimer;
+const moveCheckTime = 5000;
 // let fallTimer;
 // const fallTime = 35000;
 // let fallAlertActive = false;
@@ -17,7 +17,7 @@ let alertSound = new Audio("sounds/alert.mp3");
 // SET UP AND CREATE A CANVAS
 function setup() {
   // Create the canvas
-  const canvas = createCanvas(800, 600); // or use to make fullscreen canvas window.innerWidth, window.innerHeight, but you should to change the formula in changeFontSize()
+  const canvas = createCanvas(600, 400); // or use to make fullscreen canvas window.innerWidth, window.innerHeight, but you should to change the formula in changeFontSize()
   canvas.parent('camera');
 
   // Video capture from webcam
@@ -47,7 +47,8 @@ function start() {
   document.getElementById('startbutton').removeEventListener('click', start);
   document.getElementById('startbutton').addEventListener('click', stop);
   started = true;
-  // startStareTimer();  
+  // alertIsActive = true;
+  startStareTimer();  
   loop();
 }
 
@@ -59,7 +60,7 @@ function stop() {
   removeBlur();
   started = false;
   loop();
-  // stopStareTimer();
+  stopStareTimer();
 }
 
 function draw() {
@@ -111,7 +112,6 @@ function drawEyes()  {
       rightAnkle = pose.keypoints[16].position;
       leftAnkle = pose.keypoints[15].position;
       
-      
       //Position of eyes when a human opens experiment page. Start position.
       while(defaultRightEyePosition.length < 1) {
         defaultRightEyePosition.push(rightEye.y);
@@ -126,21 +126,21 @@ function drawEyes()  {
       let goodPosture = shoulderDifference < 15 && eyeHeightDifference < 10;
 
       //Math.abs converts a negative number to a positive one
-      if (!goodPosture && Math.abs(rightEye.y - defaultRightEyePosition[0]) > 20) {
+      if (!goodPosture && Math.abs(rightEye.y - defaultRightEyePosition[0]) > 25) {
         blurScreen();
         playAlertSound();
-        // startMoveTimer();
+        startMoveTimer();
         // startFallTimer();
       }
       
-      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 20) {
+      if (Math.abs(rightEye.y - defaultRightEyePosition[0]) < 25) {
         removeBlur();
         // resetFallTimer();
       }
       
       // Only draw an eye is the pose probability is bigger than 0.2
       if (keypoint.score > 0.9 ) {
-        fill(255, 0, 0);
+        fill(0, 255, 0);  
         noStroke();
         ellipse(rightEye.x, rightEye.y, 10, 10);
         ellipse(leftEye.x, leftEye.y, 10, 10);
@@ -150,28 +150,31 @@ function drawEyes()  {
   }
 }
 
-/*
+let alertIsActive = false;
 function startStareTimer() {
   stareTimer = setTimeout(() => {
-    alertSound1.play();
+    if (!alertIsActive) {
+      alertSound1.play();
+      alertIsActive = true;
+    }
   }, maxStareTime);
 }
 
 
-function startFallTimer() {
-  fallAlertActive = true;
+// function startFallTimer() {
+//   fallAlertActive = true;
 
-  fallTimer = setTimeout(() => {
-    if (fallAlertActive) {
-      alertSound2.play();
-    }
-  }, fallTime);
-}
+//   fallTimer = setTimeout(() => {
+//     if (fallAlertActive) {
+//       alertSound2.play();
+//     }
+//   }, fallTime);
+// }
 
-function resetFallTimer() {
-  clearTimeout(fallTimer);
-  fallAlertActive = false;
-}
+// function resetFallTimer() {
+//   clearTimeout(fallTimer);
+//   fallAlertActive = false;
+// }
 
 function resetStareTimer() {
   clearTimeout(stareTimer);
@@ -186,12 +189,12 @@ function startMoveTimer() {
 
 function stopStareTimer() {
   clearTimeout(stareTimer);
+  alertisActive = false;
 }
 
-*/
 
 function blurScreen() { 
-  document.body.style.filter = 'blur(10px)';
+  document.body.style.filter = 'blur(5px)';
   document.body.style.transition= '0.9s';
 }
 
