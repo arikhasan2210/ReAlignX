@@ -3,6 +3,13 @@ let poseNet;
 let poses = [];
 var started = false;
 let alertSound = new Audio("sounds/alert.mp3");
+let alertSound_Staring = new Audio("sounds/break_reminder.mp3");
+
+let stareStartTime = null;
+const STARE_THRESHOLD = 5000; // 5 seconds
+
+let previousEyeYAvg = null;
+const EYE_STABILITY_THRESHOLD = 5;
 
 // SET UP AND CREATE A CANVAS
 function setup() {
@@ -55,8 +62,8 @@ function draw() {
     //We use white picture as background. You can comment this line and see what will happen. It's cool glitch effect.
     // image(whitePicture, 0, 0, width, height);
     image(video, 0, 0, width, height);
-
     drawEyes();
+    checkStaring();
   }
 }
 
@@ -141,4 +148,32 @@ function blurScreen() {
 
 function removeBlur() {
   document.body.style.filter = 'blur(0px)';
+}
+
+function checkStaring() {
+  if (rightEye && leftEye) {
+    let eyeYAvg = (rightEye.y + leftEye.y) / 2;
+
+    // If it's the first detection, initialize variables
+    if (!stareStartTime || previousEyeYAvg === null) {
+      stareStartTime = millis();
+      previousEyeYAvg = eyeYAvg;
+    }
+
+    // Check if eye position is stable
+    if (Math.abs(eyeYAvg - previousEyeYAvg) < EYE_STABILITY_THRESHOLD) {
+      if (millis() - stareStartTime > STARE_THRESHOLD) {
+        alertSound_Staring.play();
+        stareStartTime = millis(); // Reset timer
+      }
+    } else {
+      // If eye movement is detected, reset staring timer
+      stareStartTime = millis();
+    }
+
+    previousEyeYAvg = eyeYAvg; // Update for next frame
+  } else {
+    stareStartTime = null; // Reset if no eyes detected
+    previousEyeYAvg = null;
+  }
 }
